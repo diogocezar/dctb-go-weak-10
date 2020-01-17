@@ -48,6 +48,7 @@ export default function Main({ navigation }) {
     });
     setDevs(response.data.devs);
   };
+  const handleRegionChanged = () => {};
   if (!currentRegion) return null;
   return (
     <>
