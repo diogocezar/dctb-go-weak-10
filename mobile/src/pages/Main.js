@@ -17,6 +17,7 @@ import api from "../services/api";
 
 export default function Main({ navigation }) {
   const [devs, setDevs] = useState([]);
+  const [techs, setTechs] = useState("");
   const [currentRegion, setCurrentRegion] = useState(null);
   useEffect(() => {
     const loadPosition = async () => {
@@ -26,7 +27,6 @@ export default function Main({ navigation }) {
           enableHighAccuracy: true
         });
         const { latitude, longitude } = coords;
-        console.log(latitude, longitude);
         setCurrentRegion({
           latitude,
           longitude,
@@ -43,38 +43,51 @@ export default function Main({ navigation }) {
       params: {
         latitude,
         longitude,
-        techs: "ReactJS"
+        techs
       }
     });
     setDevs(response.data.devs);
   };
-  const handleRegionChanged = () => {};
+  const handleRegionChanged = region => {
+    setCurrentRegion(region);
+  };
   if (!currentRegion) return null;
   return (
     <>
-      <MapView style={styles.map} initialRegion={currentRegion}>
-        <Marker coordinate={{ longitude: -51.1850782, latitude: -23.3328124 }}>
-          <Image
-            style={styles.avatar}
-            source={{
-              uri: "https://avatars3.githubusercontent.com/u/8019111?v=4"
-            }}
-          />
-          <Callout
-            onPress={() => {
-              navigation.navigate("Profile", { github_username: "diogocezar" });
+      <MapView
+        style={styles.map}
+        initialRegion={currentRegion}
+        onRegionChangeComplete={handleRegionChanged}
+      >
+        {devs.map(dev => (
+          <Marker
+            key={dev._id}
+            coordinate={{
+              longitude: dev.location.coordinates[0],
+              latitude: dev.location.coordinates[1]
             }}
           >
-            <View style={styles.callout}>
-              <Text style={styles.devName}>Diogo Cezar Teixeira Batista</Text>
-              <Text style={styles.devBio}>
-                Just a guy that knows that knows nothing. Full Stack Web
-                Developer, Teacher and Web Dinosaur.
-              </Text>
-              <Text style={styles.devTechs}>Node.js, ReactJS</Text>
-            </View>
-          </Callout>
-        </Marker>
+            <Image
+              style={styles.avatar}
+              source={{
+                uri: dev.avatar_url
+              }}
+            />
+            <Callout
+              onPress={() => {
+                navigation.navigate("Profile", {
+                  github_username: dev.github_username
+                });
+              }}
+            >
+              <View style={styles.callout}>
+                <Text style={styles.devName}>{dev.name}</Text>
+                <Text style={styles.devBio}>{dev.bio}</Text>
+                <Text style={styles.devTechs}>{dev.techs.join(", ")}</Text>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
       </MapView>
       <View style={styles.searchForm}>
         <TextInput
@@ -83,8 +96,10 @@ export default function Main({ navigation }) {
           placeholderTextColor="#999"
           autoCapitalize="words"
           autoCorrect={false}
+          value={techs}
+          onChangeText={setTechs}
         />
-        <TouchableOpacity onPress={() => {}} style={styles.loadButton}>
+        <TouchableOpacity onPress={loadDevs} style={styles.loadButton}>
           <MaterialIcons name="my-location" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
